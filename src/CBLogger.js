@@ -1,93 +1,83 @@
 'use strict';
 
-const CBAlerter = {
-	alert(alert, scope) {
-		if (this.alertWebhook) {
-			this.alertWebhook.sendWebhook({
-				'text': '',
-				'attachments': [
-					{
-						'fallback': alert,
-						'color': '#EA4857',
-						'pretext': scope ? `<!${scope}>` : '',
-						'text': alert
-					}
-				],
-				"channel": process.env.alertChannel
-			}, function(err, res) {
-				if (err) {
-					console.error('** ERROR: Failed to send Slack alert:', err);
-				} else {
-					console.log(`** info: Delivered Slack alert: ${alert}`);
-				}
-			});
-		} else {
-			console.error('** ERROR: Failed to send Slack alert, alert webhook not configured for CBAlerter');
-		}
-	}
-}
+const StandardError = require('@unplgtc/StandardError');
+const path = require('path');
+const util = require('util');
 
 const CBLogger = {
-	info(text, data, alert, scope) {
-		if (data) {
-			if (data.source) {
-			    data.source = data.source.split('/').pop();
-			}
-			console.log(`info: ** ${text}\n->`, data);
-		} else {
-			console.log(`info: ** ${text}`);
-		}
-		if (alert) {
-			this.alert(text, scope);
-		}
+	debug(key, data, options = {}, err) {
+		this.log('DEBUG', key, data, options, err);
 	},
-	warn(text, data, alert, scope) {
-		if (data) {
-			if (data.source) {
-			    data.source = data.source.split('/').pop();
-			}
-			console.error(`WARN: ** ${text}\n->`, data);
-		} else {
-			console.error(`WARN: ** ${text}`);
-		}
-		if (alert) {
-			this.alert(text, scope);
-		}
+
+	info(key, data, options = {}, err) {
+		this.log('INFO', key, data, options, err);
 	},
-	error(text, data, err, alert, scope) {
-		// Pull the stack trace and cut CBLogger out of it
-		var stack = new Error().stack;
-		stack = stack.split('\n').slice(2).join('\n').slice(3);
 
-		// If CBLogger was passed a StandardError object, move the object to the err param and set its message as the text
-		if (typeof text == "object" && text.message) {
-			err = text;
-			text = text.message;
-		}
+	warn(key, data, options = {}, err) {
+		this.log('WARN', key, data, options, err);
+	},
 
-		// If source data was passed in, split to only show the file name
-		if (data && data.source) {
-			data.source = data.source.split('/').pop();
-		}
+	error(key, data, options = {}, err) {
+		this.log('ERROR', key, data, options, err);
+	},
 
-		// Print the error
-		if (err && data) {
-			console.error(`ERROR: ** ${text}\n->`, data, '\n!!', err);
-		} else if (err) {
-			console.error(`ERROR: ** ${text}\n!!`, err, '\n||', stack);
-		} else if (data) {
-			console.error(`ERROR: ** ${text}\n->`, data);
-		} else {
-			console.error(`ERROR: ** ${text}`);
+	extend(object) {
+		if (this._extended) {
+			return StandardError.cblogger_409;
 		}
-		if (alert) {
-			this.alert(text, scope);
-		}
+		return this.extendPrototype(object);		
 	}
 }
 
-// Delegate from CBLogger to CBAlerter
-Object.setPrototypeOf(CBLogger, CBAlerter);
+const Internal = {
+	log(level, key, data, options, err) {
+		var sourceStack = this.sourceStack();
+		var ts = new Date();
+		var output = [
+			`${level}: ** ${key}`,
+			`${data ? `\n${util.inspect(data)}` : ''}`,
+			`${err ? `\n** ${(typeof err == 'string' ? err : util.inspect(err))}` : ''}`,
+			`\n-> ${sourceStack.source}`,
+			`${options.ts !== 'false' ? `at ${ts.toISOString().replace('T', ' ')} (${ts.getTime()})` : ''}`,
+			`${options.stack ? `\n   ${sourceStack.stack}` : ''}`
+		];
+		if (['WARN', 'ERROR'].includes(level)) {
+			console.error(...output);
+		} else {
+			console.log(...output);
+		}
+		if (options.alert) {
+			if (this._extended) {
+				this.alert(key, options.scope);
+			} else {
+				this.error('logger_cannot_alert', null, {stack: true}, StandardError.cblogger_503);
+			}
+		}
+	},
+
+	sourceStack() {
+		// Pull the stack trace and cut CBLogger lines out of it
+		var stack = (new Error().stack).split('\n').slice(4);
+		return {source: path.basename(stack[0]).split(':')[0], stack: stack.join('\n').slice(4)};
+	},
+
+	extendPrototype(object) {
+		if (!object.hasOwnProperty('alert') || typeof object.alert != 'function') {
+			return StandardError.cblogger_501;
+		}
+		this._extended = true;
+		// Delegate from Internal to extended object
+		Object.setPrototypeOf(Object.getPrototypeOf(this), object);
+		return true;
+	}
+}
+
+StandardError.add([
+	{code: 'cblogger_409', domain: 'CBLogger', title: 'Conflict', message: 'Logger has already been extended'},
+	{code: 'cblogger_501', domain: 'CBLogger', title: 'Not Implemented', message: 'Alert object passed to `CBLogger.extend` does not implement an `alert` function'},
+	{code: 'cblogger_503', domain: 'CBLogger', title: 'Service Unavailable', message: 'CBLogger has not been extended, alert service unavailable'}
+]);
+
+Object.setPrototypeOf(CBLogger, Internal);
 
 module.exports = CBLogger;
-

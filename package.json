@@ -1,0 +1,28 @@
+{
+  "name": "@unplgtc/cblogger",
+  "version": "0.0.0",
+  "description": "Standardized logging object for Node applications",
+  "main": "src/CBLogger.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/unplgtc/CBLogger.git"
+  },
+  "author": "Alex Guyot <guyot@unapologetic.io> (https://unapologetic.io)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/unplgtc/CBLogger/issues"
+  },
+  "homepage": "https://github.com/unplgtc/CBLogger#readme",
+  "devDependencies": {
+    "jest": "^23.4.2"
+  },
+  "dependencies": {
+    "@unplgtc/standarderror": "0.0.1"
+  },
+  "directories": {
+    "test": "test"
+  }
+}

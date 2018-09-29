@@ -1,13 +1,14 @@
 'use strict';
 
 const CBLogger = require('./../src/CBLogger');
+const CBAlerter = require('@unplgtc/cbalerter');
 const StandardError = require('@unplgtc/standarderror');
 const util = require('util');
 
 // Global Setup
 var alerter = {
-	alert(key, scope) {
-		console.log(`ALERTING ${key} with scope ${scope}`)
+	alert(level, key, data, options, err) {
+		console.log(`ALERTING ${key} with scope ${level}`);
 	}
 }
 
@@ -15,8 +16,8 @@ var alerter = {
 test(`Extend CBLogger with alerter object`, async() => {
 	// Setup
 	var badAlerter = {
-		functionNotNamedAlert(nope) {
-			console.error(nope);
+		functionNotNamedAlert() {
+			console.error('Nope!');
 		}
 	}
 
@@ -25,7 +26,7 @@ test(`Extend CBLogger with alerter object`, async() => {
 	var goodRes = CBLogger.extend(alerter);
 
 	// Test
-	expect(badRes).toBe(StandardError.cblogger_501);
+	expect(badRes).toBe(StandardError.CBLogger_501);
 	expect(goodRes).toBe(true);
 });
 
@@ -36,7 +37,7 @@ test(`Unextend CBLogger`, async() => {
 
 	// Test
 	expect(res).toBe(true);
-	expect(errRes).toBe(StandardError.cblogger_405);
+	expect(errRes).toBe(StandardError.CBLogger_405);
 });
 
 describe.each`
@@ -57,18 +58,21 @@ describe.each`
 	${'error_4_err_stack'} | ${{text: 'Test 14'}}  | ${{stack: true}} | ${StandardError[500]} | ${'error'} | ${'error'}
 `(`CBLogger logs expected output for each logging function based on arguments`, ({key, data, options, err, logFunc, func}) => {
 	// Setup
+	var mockedSource = 'fileName L1';
+	var mockedStack = new Error().stack;
+	var mockedSourceStack = {source: mockedSource, stack: mockedStack};
+
 	console.log = jest.fn();
 	console.error = jest.fn();
 	CBLogger.sourceStack = jest.fn(() => mockedSourceStack);
+	
 	var mockedDate = new Date();
 	global.Date = jest.fn(() => mockedDate);
+	
 	var mockedOpts = options;
 	if (!mockedOpts || typeof mockedOpts != 'object') {
 		mockedOpts = {};
 	}
-	var mockedSource = 'fileName L1';
-	var mockedStack = new Error().stack;
-	var mockedSourceStack = {source: mockedSource, stack: mockedStack};
 	var keyLine = `${func.toUpperCase()}: ** ${key}`;
 	var dataLine = `${data ? `\n${util.inspect(data)}` : ''}`;
 	var errLine = `${err ? `\n** ${(typeof err == 'string' ? err : util.inspect(err))}` : ''}`;
@@ -94,11 +98,10 @@ describe.each`
 			options = {};
 		}
 		options.alert = true;
-		options.scope = func;
 		args = [key, data, options, err];
 		var errorKeyLine = `ERROR: ** logger_cannot_alert`;
 		var errorStackLine = `\n   ${mockedStack}`;
-		var errorErrLine = `\n** ${util.inspect(StandardError.cblogger_503)}`;
+		var errorErrLine = `\n** ${util.inspect(StandardError.CBLogger_503)}`;
 
 		// Execute
 		CBLogger[func](...args);
@@ -118,7 +121,7 @@ describe.each`
 
 	test(`${key} with alert and alerter outputs expected log message + fires alerter`, async() => {
 		// Setup
-		var alertMessage = `ALERTING ${key} with scope ${func}`;
+		var alertMessage = `ALERTING ${key} with scope ${func.toUpperCase()}`;
 
 		// Execute
 		CBLogger[func](...args);

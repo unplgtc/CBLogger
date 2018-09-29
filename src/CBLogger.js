@@ -23,14 +23,14 @@ const CBLogger = {
 
 	extend(object) {
 		if (this._extended) {
-			return StandardError.cblogger_409;
+			return StandardError.CBLogger_409;
 		}
 		return this.extendPrototype(object);		
 	},
 
 	unextend() {
 		if (!this._extended) {
-			return StandardError.cblogger_405;
+			return StandardError.CBLogger_405;
 		}
 		return this.unextendPrototype();
 	}
@@ -58,9 +58,9 @@ const Internal = {
 		}
 		if (options.alert) {
 			if (this._extended) {
-				this.alert(key, options.scope);
+				this.alert(level, key, data, options, err);
 			} else {
-				this.error('logger_cannot_alert', null, {stack: true}, StandardError.cblogger_503);
+				this.error('logger_cannot_alert', null, {stack: true}, StandardError.CBLogger_503);
 			}
 		}
 	},
@@ -74,7 +74,7 @@ const Internal = {
 
 	extendPrototype(object) {
 		if (!object.hasOwnProperty('alert') || typeof object.alert != 'function') {
-			return StandardError.cblogger_501;
+			return StandardError.CBLogger_501;
 		}
 		this._extended = true;
 		// Delegate from Internal to extended object
@@ -91,10 +91,10 @@ const Internal = {
 }
 
 StandardError.add([
-	{code: 'cblogger_405', domain: 'CBLogger', title: 'Method Not Allowed', message: 'Cannot unextend because CBLogger is not currently extended'},
-	{code: 'cblogger_409', domain: 'CBLogger', title: 'Conflict', message: 'Logger has already been extended'},
-	{code: 'cblogger_501', domain: 'CBLogger', title: 'Not Implemented', message: 'Alert object passed to `CBLogger.extend` does not implement an `alert` function'},
-	{code: 'cblogger_503', domain: 'CBLogger', title: 'Service Unavailable', message: 'CBLogger has not been extended, alert service unavailable'}
+	{code: 'CBLogger_405', domain: 'CBLogger', title: 'Method Not Allowed', message: 'Cannot unextend because CBLogger is not currently extended'},
+	{code: 'CBLogger_409', domain: 'CBLogger', title: 'Conflict', message: 'Logger has already been extended'},
+	{code: 'CBLogger_501', domain: 'CBLogger', title: 'Not Implemented', message: 'Alert object passed to `CBLogger.extend` does not implement an `alert` function'},
+	{code: 'CBLogger_503', domain: 'CBLogger', title: 'Service Unavailable', message: 'CBLogger has not been extended, alert service unavailable'}
 ]);
 
 Object.setPrototypeOf(CBLogger, Internal);

@@ -17,7 +17,8 @@
   },
   "homepage": "https://github.com/unplgtc/CBLogger#readme",
   "devDependencies": {
-    "jest": "^23.4.2"
+    "jest": "^23.4.2",
+    "@unplgtc/cbalerter": "0.0.1"
   },
   "dependencies": {
     "@unplgtc/standarderror": "0.0.1"

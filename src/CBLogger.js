@@ -1,6 +1,6 @@
 'use strict';
 
-const StandardError = require('@unplgtc/standarderror');
+const StandardError = require('@unplgtc/standard-error');
 const path = require('path');
 const util = require('util');
 

@@ -2,7 +2,7 @@
 
 const CBLogger = require('./../src/CBLogger');
 const CBAlerter = require('@unplgtc/cbalerter');
-const StandardError = require('@unplgtc/standarderror');
+const StandardError = require('@unplgtc/standard-error');
 const util = require('util');
 
 // Global Setup

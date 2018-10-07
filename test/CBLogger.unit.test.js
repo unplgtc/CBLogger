@@ -1,14 +1,16 @@
 'use strict';
 
-const CBLogger = require('./../src/CBLogger');
 const CBAlerter = require('@unplgtc/cbalerter');
+const CBLogger = require('./../src/CBLogger');
 const StandardError = require('@unplgtc/standard-error');
+const StandardPromise = require('@unplgtc/standard-promise');
 const util = require('util');
 
 // Global Setup
 var alerter = {
 	alert(level, key, data, options, err) {
 		console.log(`ALERTING ${key} with scope ${level}`);
+		return Promise.resolve('Success');
 	}
 }
 
@@ -138,4 +140,44 @@ describe.each`
 		// Test
 		expect(res).toBe(true);
 	});	
+});
+
+test(`CBLogger extended with invalid alerter (wrong number of accepted arguments) outputs error when called`, async() => {
+	CBLogger.error = jest.fn();
+
+	// Setup
+	var subtleBadAlerter = {
+		alert() {
+			console.error('Not enough arguments!');
+		}
+	}
+
+	// Execute
+	var extendRes = CBLogger.extend(subtleBadAlerter);
+	await CBLogger.info('test', {message: 'some_message'}, {alert: true});
+	CBLogger.unextend();
+
+	// Test
+	expect(extendRes).toBe(true);
+	expect(CBLogger.error).toHaveBeenCalledWith('alert_exception', expect.any(Object), undefined, expect.any(Object));
+});
+
+test(`CBLogger extended with invalid alerter (doesn't return promise) outputs error when called`, async() => {
+	CBLogger.error = jest.fn();
+
+	// Setup
+	var subtleBadAlerter = {
+		alert(level, key, data, options, err) {
+			return 'Not a promise!';
+		}
+	}
+
+	// Execute
+	var extendRes = CBLogger.extend(subtleBadAlerter);
+	await CBLogger.info('test', {message: 'some_message'}, {alert: true});
+	CBLogger.unextend();
+
+	// Test
+	expect(extendRes).toBe(true);
+	expect(CBLogger.error).toHaveBeenCalledWith('alert_exception', expect.any(Object), undefined, expect.any(Object));
 });

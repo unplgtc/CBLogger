@@ -1,6 +1,6 @@
 {
   "name": "@unplgtc/cblogger",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Standardized logging object for Node applications",
   "main": "src/CBLogger.js",
   "scripts": {
@@ -18,11 +18,11 @@
   "homepage": "https://github.com/unplgtc/CBLogger#readme",
   "devDependencies": {
     "jest": "^23.4.2",
-    "@unplgtc/cbalerter": "0.1.0"
+    "@unplgtc/cbalerter": "0.1.1"
   },
   "dependencies": {
     "@unplgtc/standard-error": "0.1.0",
-    "@unplgtc/standard-promise": "0.1.0"
+    "@unplgtc/standard-promise": "0.2.0"
   },
   "directories": {
     "test": "test"

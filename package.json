@@ -1,6 +1,6 @@
 {
   "name": "@unplgtc/cblogger",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Standardized logging object for Node applications",
   "main": "src/CBLogger.js",
   "scripts": {

@@ -79,7 +79,7 @@ describe.each`
 	var dataLine = `${data ? `\n${util.inspect(data)}` : ''}`;
 	var errLine = `${err ? `\n** ${(typeof err == 'string' ? err : util.inspect(err))}` : ''}`;
 	var sourceLine = `\n-> ${mockedSource}`;
-	var tsLine = `${mockedOpts.ts !== 'false' ? `at ${mockedDate.toISOString().replace('T', ' ')} (${mockedDate.getTime()})` : ''}`;
+	var tsLine = `${mockedOpts.ts !== false ? `at ${mockedDate.toISOString().replace('T', ' ')} (${mockedDate.getTime()})` : ''}`;
 	var stackLine = `${mockedOpts.stack ? `\n   ${mockedStack}` : ''}`;
 
 	var args = [key, data, options, err];
@@ -102,6 +102,7 @@ describe.each`
 		options.alert = true;
 		args = [key, data, options, err];
 		var errorKeyLine = `ERROR: ** logger_cannot_alert`;
+		var errTsLine = `${`at ${mockedDate.toISOString().replace('T', ' ')} (${mockedDate.getTime()})`}`;
 		var errorStackLine = `\n   ${mockedStack}`;
 		var errorErrLine = `\n** ${util.inspect(StandardError.CBLogger_503)}`;
 
@@ -110,7 +111,7 @@ describe.each`
 
 		// Test
 		expect(console[logFunc]).toHaveBeenCalledWith(...outputArgs);
-		expect(console.error).toHaveBeenCalledWith(errorKeyLine, errorErrLine, sourceLine, tsLine, errorStackLine);
+		expect(console.error).toHaveBeenCalledWith(errorKeyLine, errorErrLine, sourceLine, errTsLine, errorStackLine);
 	});
 
 	test(`add alerter`, async() => {

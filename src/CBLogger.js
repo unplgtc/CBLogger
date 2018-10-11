@@ -49,7 +49,7 @@ const Internal = {
 			`${data ? `\n${util.inspect(data)}` : ''}`,
 			`${err ? `\n** ${(typeof err == 'string' ? err : util.inspect(err))}` : ''}`,
 			`\n-> ${sourceStack.source}`,
-			`${options.ts !== 'false' ? `at ${ts.toISOString().replace('T', ' ')} (${ts.getTime()})` : ''}`,
+			`${options.ts !== false ? `at ${ts.toISOString().replace('T', ' ')} (${ts.getTime()})` : ''}`,
 			`${options.stack ? `\n   ${sourceStack.stack}` : ''}`
 		].filter(line => line);
 		if (['WARN', 'ERROR'].includes(level)) {

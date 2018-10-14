@@ -24,14 +24,14 @@ const CBLogger = {
 
 	extend(object) {
 		if (this._extended) {
-			return StandardError.CBLogger_409;
+			return StandardError.CBLogger_409();
 		}
 		return this.extendPrototype(object);		
 	},
 
 	unextend() {
 		if (!this._extended) {
-			return StandardError.CBLogger_405;
+			return StandardError.CBLogger_405();
 		}
 		return this.unextendPrototype();
 	}
@@ -68,7 +68,7 @@ const Internal = {
 					}
 				}
 			} else {
-				this.error('logger_cannot_alert', null, {stack: true}, StandardError.CBLogger_503);
+				this.error('logger_cannot_alert', null, {stack: true}, StandardError.CBLogger_503());
 			}
 		}
 	},
@@ -82,7 +82,7 @@ const Internal = {
 
 	extendPrototype(object) {
 		if (!object.hasOwnProperty('alert') || typeof object.alert != 'function') {
-			return StandardError.CBLogger_501;
+			return StandardError.CBLogger_501();
 		}
 		this._extended = true;
 		// Delegate from Internal to extended object

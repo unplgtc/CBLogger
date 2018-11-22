@@ -1,6 +1,5 @@
 'use strict';
 
-const _ = require('@unplgtc/standard-promise');
 const StandardError = require('@unplgtc/standard-error');
 const path = require('path');
 const util = require('util');
@@ -59,13 +58,13 @@ const Internal = {
 		}
 		if (options.alert) {
 			if (this._extended) {
-				var alertRes = await _(this.alert(level, key, data, options, err));
-				if (alertRes.err) {
-					if (alertRes.err.code && alertRes.err.code == 'StandardPromise_500') {
-						this.error('alert_exception', {message: 'Exception thrown awaiting alert response. Make sure the alert() function that CBLogger was extended with takes five arguments and returns a promise.'}, undefined, alertRes.err);
-					} else {
-						this.error('alert_error_response', {message: 'Received error response from extended alerter'}, undefined, alertRes.err);
-					}
+				try {
+					await this.alert(level, key, data, options, err)
+						.catch((err) => {
+							this.error('alert_error_response', {message: 'Received error response from extended alerter'}, undefined, err);
+						});
+				} catch (err) {
+					this.error('alert_error_thrown', {message: 'Error thrown attempting to await alert function - make sure alerter takes correct arguments and returns a Promise'}, undefined, err);
 				}
 			} else {
 				this.error('logger_cannot_alert', null, {stack: true}, StandardError.CBLogger_503());

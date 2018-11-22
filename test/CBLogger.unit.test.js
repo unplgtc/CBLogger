@@ -3,7 +3,6 @@
 const CBAlerter = require('@unplgtc/cbalerter');
 const CBLogger = require('./../src/CBLogger');
 const StandardError = require('@unplgtc/standard-error');
-const StandardPromise = require('@unplgtc/standard-promise');
 const util = require('util');
 
 // Global Setup
@@ -160,7 +159,7 @@ test(`CBLogger extended with invalid alerter (wrong number of accepted arguments
 
 	// Test
 	expect(extendRes).toBe(true);
-	expect(CBLogger.error).toHaveBeenCalledWith('alert_exception', expect.any(Object), undefined, expect.any(Object));
+	expect(CBLogger.error).toHaveBeenCalledWith('alert_error_thrown', expect.any(Object), undefined, expect.any(Object));
 });
 
 test(`CBLogger extended with invalid alerter (doesn't return promise) outputs error when called`, async() => {
@@ -180,5 +179,5 @@ test(`CBLogger extended with invalid alerter (doesn't return promise) outputs er
 
 	// Test
 	expect(extendRes).toBe(true);
-	expect(CBLogger.error).toHaveBeenCalledWith('alert_exception', expect.any(Object), undefined, expect.any(Object));
+	expect(CBLogger.error).toHaveBeenCalledWith('alert_error_thrown', expect.any(Object), undefined, expect.any(Object));
 });

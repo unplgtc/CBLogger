@@ -3,7 +3,6 @@
 const CBAlerter = require('@unplgtc/cbalerter');
 const CBLogger = require('./../src/CBLogger');
 const StandardError = require('@unplgtc/standard-error');
-const StandardPromise = require('@unplgtc/standard-promise');
 const util = require('util');
 
 // Global Setup

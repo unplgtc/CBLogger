@@ -17,6 +17,7 @@ Install CBLogger from npm:
 
 ```
 $ npm install @unplgtc/cblogger --save
+```
 
 Import CBLogger into a service:
 

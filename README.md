@@ -11,7 +11,12 @@ CBLogger provides a light interface which you can use in place of calls to `cons
 
 Once you transition to CBLogger, your application's log output will be richer and more useful. Monitoring and debugging problems will be easier than ever before.
 
-## Basic Usage
+## Usage
+
+Install CBLogger from npm:
+
+```
+$ npm install @unplgtc/cblogger --save
 
 Import CBLogger into a service:
 

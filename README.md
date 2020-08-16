@@ -151,7 +151,7 @@ The `alert` and `webhook` options trigger custom webhook alerting objects which 
 `err` is the fourth and final argument for CBLogger's log output functions. `err` can be any object, but by convention it should represent an actual error that the log message pertains to. This argument is often used for JavaScript `Error` objects which have been thrown and caught and need to be outputted into your logs. You can also use [StandardError](https://github.com/unplgtc/StandardError) errors for this argument, but those are most commonly placed in the `data` Object so that `err` is free for a thrown error. Whatever you choose to pass in for `err`, it will be printed underneath the `data` object, preceded by two asterisks.
 
 ```js
-CBLogger.error('some_error_key', {message: 'Uh oh there was an error'}, undefined, new Error());
+CBLogger.error('some_error_key', {message: 'Uh oh there was an error'}, undefined, new Error('oh no'));
 ```
 
 Output:
@@ -159,7 +159,7 @@ Output:
 ```
 INFO: ** some_error_key 
 { message: 'Uh oh there was an error' } 
-** Error
+** Error: oh no
     at Object.<anonymous> (/Users/path/to/file/src/MyService.js:7:79)
     at Module._compile (module.js:643:30)
     at Object.Module._extensions..js (module.js:654:10)
@@ -171,6 +171,26 @@ INFO: ** some_error_key
     at bootstrap_node.js:608:3 
 -> test.js L7 at 2018-10-11 04:00:27.363Z (1539230427363)
 ```
+
+If you are outputting an actual JavaScript `Error` Object — as by convention you generally should be for the `err` argument — then you can omit the `options` or `data` arguments on occassions where you have no options or data to pass. This means there's no need to add unnecessary `undefined` or `null` arguments to space out your CBLogger call such that `err` is the fouth arg. In other words, this call:
+
+```js
+CBLogger.error('some_error_key', {message: 'Uh oh there was an error'}, undefined, new Error('oh no'));
+```
+
+Is entirely equivalent to this call:
+
+```js
+CBLogger.error('some_error_key', {message: 'Uh oh there was an error'}, new Error('oh no'));
+```
+
+Similarly, if no extra data output is needed, this call will set the `Error` to the `err` argument as well:
+
+```js
+CBLogger.error('some_error_key', new Error('oh no'));
+```
+
+Again, this shortcut only works with actual `Error` Objects (or extensions of the `Error` Object), so if you want a string or other Object output as `err` then you will need to space the arguments with `undefined` or `null` as necessary.
 
 ## Extending with Alerters
 

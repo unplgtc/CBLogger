@@ -38,9 +38,21 @@ const CBLogger = {
 
 const Internal = {
 	log: async function(level, key, data, options, err) {
+		if (!err) {
+			if (data instanceof Error) {
+				err = data;
+				data = undefined;
+			}
+			if (options instanceof Error) {
+				err = options;
+				options = undefined;
+			}
+		}
+
 		if (!options || typeof options != 'object') {
 			options = {};
 		}
+
 		var sourceStack = this.sourceStack();
 		var ts = new Date();
 		var output = [
@@ -75,8 +87,10 @@ const Internal = {
 	sourceStack() {
 		// Pull the stack trace and cut CBLogger lines out of it
 		var stack = (new Error().stack).split('\n').slice(4);
-		var source = path.basename(stack[0]).split(':');
-		return {source: `${source[0]} L${source[1]}`, stack: stack.join('\n').slice(4)};
+		var source = stack[0].split('/').slice(-2);
+		var line = source[1].split(':')[1];
+		source = source.join('/').split(':')[0];
+		return {source: `${source} L${line}`, stack: stack.join('\n').slice(4)};
 	},
 
 	extendPrototype(object) {

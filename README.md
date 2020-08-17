@@ -231,3 +231,7 @@ result = CBLogger.unextend();
 result = CBLogger.extend(someAlerter);
 // true
 ```
+
+## cls-rtracer Support
+
+CBLogger supports outputting request IDs if your application is using the [cls-rtracer package](https://github.com/puzpuzpuz/cls-rtracer). cls-rtracer uses the [`AsyncLocalStorage` class](https://nodejs.org/api/async_hooks.html#async_hooks_class_asynclocalstorage) from the experimental [`async_hooks` core Node module](https://nodejs.org/api/async_hooks.html) to generate unique IDs for requests coming into your application. cls-rtracer supports several different server middlewares, including [Express](https://expressjs.com). If you add support for cls-rtracer to your application, CBLogger will automatically identify this and include request IDs in your log output — no configuration required.

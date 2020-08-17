@@ -4,6 +4,9 @@ const StandardError = require('@unplgtc/standard-error');
 const path = require('path');
 const util = require('util');
 
+let rTracer;
+try { rTracer = require('cls-rtracer'); } catch (err) {}
+
 const CBLogger = {
 	debug(key, data, options, err) {
 		return this.log('DEBUG', key, data, options, err);
@@ -51,6 +54,18 @@ const Internal = {
 
 		if (!options || typeof options != 'object') {
 			options = {};
+		}
+
+		let reqId;
+		if (rTracer) {
+			reqId = rTracer.id();
+		}
+
+		if (reqId && !data) {
+			data = { _requestId: reqId };
+
+		} else if (reqId && typeof data == 'object') {
+			data._requestId = reqId;
 		}
 
 		var sourceStack = this.sourceStack();

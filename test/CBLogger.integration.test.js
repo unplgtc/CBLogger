@@ -35,7 +35,7 @@ test(`Extend CBLogger with CBAlerter and fire alert`, async() => {
 	});
 
 	// Execute
-	var res = CBLogger.extend(CBAlerter);
+	var res = CBLogger.extend(CBLogger.EXTENSION.Alerter, CBAlerter);
 	CBLogger.debug(...args);
 
 	// Test

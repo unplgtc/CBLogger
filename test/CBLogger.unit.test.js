@@ -23,8 +23,8 @@ test(`Extend CBLogger with alerter object`, async() => {
 	}
 
 	// Execute
-	var badRes = CBLogger.extend(badAlerter);
-	var goodRes = CBLogger.extend(alerter);
+	var badRes = CBLogger.extend(CBLogger.EXTENSION.Alerter, badAlerter);
+	var goodRes = CBLogger.extend(CBLogger.EXTENSION.Alerter, alerter);
 
 	// Test
 	expect(badRes).toEqual(StandardError.CBLogger_501());
@@ -33,8 +33,8 @@ test(`Extend CBLogger with alerter object`, async() => {
 
 test(`Unextend CBLogger`, async() => {
 	// Execute
-	var res = CBLogger.unextend();
-	var errRes = CBLogger.unextend();
+	var res = CBLogger.unextendAlerter();
+	var errRes = CBLogger.unextendAlerter();
 
 	// Test
 	expect(res).toBe(true);
@@ -115,7 +115,7 @@ describe.each`
 
 	test(`add alerter`, async() => {
 		// Execute
-		var res = CBLogger.extend(alerter);
+		var res = CBLogger.extend(CBLogger.EXTENSION.Alerter, alerter);
 
 		// Test
 		expect(res).toBe(true);
@@ -135,7 +135,7 @@ describe.each`
 
 	test(`remove alerter`, async() => {
 		// Execute
-		var res = CBLogger.unextend();
+		var res = CBLogger.unextendAlerter();
 
 		// Test
 		expect(res).toBe(true);
@@ -153,9 +153,9 @@ test(`CBLogger extended with invalid alerter (wrong number of accepted arguments
 	}
 
 	// Execute
-	var extendRes = CBLogger.extend(subtleBadAlerter);
+	var extendRes = CBLogger.extend(CBLogger.EXTENSION.Alerter, subtleBadAlerter);
 	await CBLogger.info('test', {message: 'some_message'}, {alert: true});
-	CBLogger.unextend();
+	CBLogger.unextendAlerter();
 
 	// Test
 	expect(extendRes).toBe(true);
@@ -173,9 +173,9 @@ test(`CBLogger extended with invalid alerter (doesn't return promise) outputs er
 	}
 
 	// Execute
-	var extendRes = CBLogger.extend(subtleBadAlerter);
+	var extendRes = CBLogger.extend(CBLogger.EXTENSION.Alerter, subtleBadAlerter);
 	await CBLogger.info('test', {message: 'some_message'}, {alert: true});
-	CBLogger.unextend();
+	CBLogger.unextendAlerter();
 
 	// Test
 	expect(extendRes).toBe(true);

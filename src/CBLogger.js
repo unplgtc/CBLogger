@@ -8,6 +8,11 @@ let rTracer;
 try { rTracer = require('cls-rtracer'); } catch (err) {}
 
 const CBLogger = {
+	EXTENSION: {
+		Alerter: '_alerter',
+		Honeybadger: '_honeybadger'
+	},
+
 	debug(key, data, options, err) {
 		return this.log('DEBUG', key, data, options, err);
 	},
@@ -24,15 +29,15 @@ const CBLogger = {
 		return this.log('ERROR', key, data, options, err);
 	},
 
-	extend(object) {
-		if (this._extended) {
+	extend(type, object) {
+		if (this[type]) {
 			return StandardError.CBLogger_409();
 		}
-		return this.extendPrototype(object);		
+		return this.extendLogger(type, object);
 	},
 
-	unextend() {
-		if (!this._extended) {
+	unextendAlerter() {
+		if (!this[this.EXTENSION.Alerter]) {
 			return StandardError.CBLogger_405();
 		}
 		return this.unextendPrototype();
@@ -68,9 +73,10 @@ const Internal = {
 			data._requestId = reqId;
 		}
 
-		var sourceStack = this.sourceStack();
-		var ts = new Date();
-		var output = [
+		const sourceStack = this.sourceStack(),
+		      ts = new Date();
+
+		const output = [
 			`${level}: ** ${key}`,
 			`${data ? `\n${util.inspect(data)}` : ''}`,
 			`${err ? `\n** ${(typeof err == 'string' ? err : util.inspect(err))}` : ''}`,
@@ -78,13 +84,23 @@ const Internal = {
 			`${options.ts !== false ? `at ${ts.toISOString().replace('T', ' ')} (${ts.getTime()})` : ''}`,
 			`${options.stack ? `\n   ${sourceStack.stack}` : ''}`
 		].filter(line => line);
+
 		if (['WARN', 'ERROR'].includes(level)) {
 			console.error(...output);
+
+			if (level === 'ERROR' && err) {
+				this.Honeybadger && this.Honeybadger.notify(err, {
+					name: key,
+					context: data
+				});
+			}
+
 		} else {
 			console.log(...output);
 		}
+
 		if (options.alert) {
-			if (this._extended) {
+			if (this[this.EXTENSION.Alerter]) {
 				try {
 					await this.alert(level, key, data, options, err)
 						.catch((err) => {
@@ -108,18 +124,45 @@ const Internal = {
 		return {source: `${source} L${line}`, stack: stack.join('\n').slice(4)};
 	},
 
-	extendPrototype(object) {
-		if (!object.hasOwnProperty('alert') || typeof object.alert != 'function') {
-			return StandardError.CBLogger_501();
+	extendLogger(type, object) {
+		if (type === this.EXTENSION.Alerter) {
+			if (!object.hasOwnProperty('alert') || typeof object.alert !== 'function') {
+				return StandardError.CBLogger_501();
+			}
+
+			this[this.EXTENSION.Alerter] = true;
+
+			// Delegate from Internal to extended object
+			Object.setPrototypeOf(Object.getPrototypeOf(this), object);
+			return true;
+
+		} else if (type === this.EXTENSION.Honeybadger) {
+			if (typeof object.notify !== 'function') {
+				return StandardError.CBLogger_501();
+			}
+
+			Object.defineProperty(this, type, {
+				value: true,
+				writable: false,
+				configurable: false,
+				enumerable: false
+			});
+			Object.defineProperty(this, 'Honeybadger', {
+				value: object,
+				writable: false,
+				configurable: false,
+				enumerable: false
+			});
+
+			return true;
+
+		} else {
+			return false;
 		}
-		this._extended = true;
-		// Delegate from Internal to extended object
-		Object.setPrototypeOf(Object.getPrototypeOf(this), object);
-		return true;
 	},
 
 	unextendPrototype() {
-		this._extended = false;
+		this[this.EXTENSION.Alerter] = false;
 		// Delegate from Internal to extended object
 		Object.setPrototypeOf(Object.getPrototypeOf(this), Object.prototype);
 		return true;
@@ -127,9 +170,9 @@ const Internal = {
 }
 
 StandardError.add([
-	{code: 'CBLogger_405', domain: 'CBLogger', title: 'Method Not Allowed', message: 'Cannot unextend because CBLogger is not currently extended'},
-	{code: 'CBLogger_409', domain: 'CBLogger', title: 'Conflict', message: 'Logger has already been extended'},
-	{code: 'CBLogger_501', domain: 'CBLogger', title: 'Not Implemented', message: 'Alert object passed to `CBLogger.extend` does not implement an `alert` function'},
+	{code: 'CBLogger_405', domain: 'CBLogger', title: 'Method Not Allowed', message: 'Cannot unextend because CBLogger is not currently extended with that object type'},
+	{code: 'CBLogger_409', domain: 'CBLogger', title: 'Conflict', message: 'Logger has already been extended with this extension type'},
+	{code: 'CBLogger_501', domain: 'CBLogger', title: 'Not Implemented', message: 'Object passed to `CBLogger.extend` does not implement required function'},
 	{code: 'CBLogger_503', domain: 'CBLogger', title: 'Service Unavailable', message: 'CBLogger has not been extended, alert service unavailable'}
 ]);
 

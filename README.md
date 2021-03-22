@@ -172,7 +172,7 @@ INFO: ** some_error_key
 -> test.js L7 at 2018-10-11 04:00:27.363Z (1539230427363)
 ```
 
-If you are outputting an actual JavaScript `Error` Object — as by convention you generally should be for the `err` argument — then you can omit the `options` or `data` arguments on occassions where you have no options or data to pass. This means there's no need to add unnecessary `undefined` or `null` arguments to space out your CBLogger call such that `err` is the fouth arg. In other words, this call:
+If you are outputting an actual JavaScript `Error` Object — as by convention you generally should be for the `err` argument — then you can omit the `options` or `data` arguments on occasions where you have no options or data to pass. This means there's no need to add unnecessary `undefined` or `null` arguments to space out your CBLogger call such that `err` is the fourth arg. In other words, this call:
 
 ```js
 CBLogger.error('some_error_key', {message: 'Uh oh there was an error'}, undefined, new Error('oh no'));
@@ -192,20 +192,20 @@ CBLogger.error('some_error_key', new Error('oh no'));
 
 Again, this shortcut only works with actual `Error` Objects (or extensions of the `Error` Object), so if you want a string or other Object output as `err` then you will need to space the arguments with `undefined` or `null` as necessary.
 
-## Extending with Alerters
+## Extending with Alerter
 
 CBLogger supports being extended with a single "alerter" Object. This can be any Object which implements a function named `alert`, but if your alerts just require sending a POST message to a webhook, Unapologetic's [CBAlerter](https://github.com/unplgtc/CBAlerter) package has been purpose-built for this use case.
 
-To extend CBLogger with an alerter Object (exemplified here with CBAlerter, but that is not required) just pass the Object to CBLogger's `extend()` function:
+To extend CBLogger with an alerter Object (exemplified here with CBAlerter, but that is not required) just pass the Object to CBLogger's `extend()` function, along with the `Alerter` enum:
 
 ```js
 const CBLogger = require('@unplgtc/cblogger');
 const CBAlerter = require('@unplgtc/cbalerter');
 
-CBLogger.extend(CBAlerter);
+CBLogger.extend(CBLogger.EXTENSION.Alerter, CBAlerter);
 
 // Log an error and trigger an alert with CBAlerter
-CBLogger.error('some_error_key', {message: 'Uh oh there was an error and we should be alerted about it!'}, {alert: true}, new Error());
+CBLogger.error('some_error_key', { message: 'Uh oh there was an error and we should be alerted about it!' }, { alert: true }, new Error('Oh no'));
 ```
 
 Once extended, when CBLogger receives a call with the `alert: true` option set, it will call its alerter and pass all of the data it was given. The alerter will post that data to whatever source it has set up, then let CBLogger know whether the request was successful. If the alert succeeded then CBLogger does nothing further, but if the alert failed then CBLogger will output an error message so that you can tell your alerts aren't going through.
@@ -216,20 +216,41 @@ A valid alerter needs to not just implement a function named `alert`, but that f
 
 In the example above, CBLogger would call its extended alerter with  `alert('ERROR', key, data, options, err)`. Assuming that alerter Object is functional, it will in turn post that message to a webhook somewhere and return the success value as a Promise to CBLogger. The `level` argument will be `'DEBUG'`, `'INFO'`, `'WARN'`, or `'ERROR'`, depending on which CBLogger function was called. The remaining arguments are passed to the alerter just as they were passed to CBLogger.
 
-Finally, if for some reason you want to _change_ the alerter Object that CBLogger is extended with, you'll need to explicitly remove the existing alerter before being able to extend with a new one. This can be done with CBLogger's `unextend()` method.
+Finally, if for some reason you want to _change_ the alerter Object that CBLogger is extended with, you'll need to explicitly remove the existing alerter before being able to extend with a new one. This can be done with CBLogger's `unextendAlerter()` method.
 
 ```js
-var result = CBLogger.extend(CBAlerter);
+var result = CBLogger.extend(CBLogger.EXTENSION.Alerter, CBAlerter);
 // true
 
-result = CBLogger.extend(someAlerter);
-// StandardError.CBLogger_409 (Logger has already been extended)
+result = CBLogger.extend(CBLogger.EXTENSION.Alerter, someAlerter);
+// StandardError.CBLogger_409 (Logger has already been extended with this extension type)
 
-result = CBLogger.unextend();
+result = CBLogger.unextendAlerter();
 // true
 
-result = CBLogger.extend(someAlerter);
+result = CBLogger.extend(CBLogger.EXTENSION.Alerter, someAlerter);
 // true
+```
+
+## Extending with Honeybadger
+
+CBLogger integrates with [Honeybadger](https://honeybadger.io) to track error metrics. Enable the extension by passing a configured `Honeybadger` object to `CBLogger.extend()`, like so:
+
+```js
+const Honeybadger = require('@honeybadger-io/js');
+
+Honeybadger.configure(honeybadgerConfig);
+
+CBLogger.extend(CBLogger.EXTENSION.Honeybadger, Honeybadger);
+```
+
+Once extended, calls to `CBLogger.error()` which include an `Error` object will be passed to Honeybadger. You can use your Honeybadger configuration to determine which environments actually forward errors so that your local, dev, or test environments don't use your Honeybadger rate limits. If you pass an object in the `data` parameter of your `CBLogger.error()` call then it will be passed to Honeybadger as the `context` parameter for the error, and whatever `key` parameter you send will be passed as the error's descriptive name:
+
+```js
+// Honeybadger will receive the 'Oh no' Error with the `data` object passed as context and `oh_no` passed as name
+const data = { message: 'Some context' };
+
+CBLogger.error('oh_no', data, new Error('Oh no'));
 ```
 
 ## cls-rtracer Support

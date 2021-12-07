@@ -1,6 +1,7 @@
-module.exports = {
+export default {
   clearMocks: true,
   coverageDirectory: "test/coverage",
   rootDir: "test",
-  testEnvironment: "node"
+  testEnvironment: "node",
+  transform: {}
 };

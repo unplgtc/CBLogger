@@ -1,8 +1,7 @@
-'use strict';
-
-const CBLogger = require('./../src/CBLogger');
-const CBAlerter = require('@unplgtc/cbalerter');
-const util = require('util');
+import CBLogger from './../src/CBLogger.js';
+import CBAlerter from '@unplgtc/cbalerter';
+import { jest } from '@jest/globals';
+import util from 'util';
 
 test(`Extend CBLogger with CBAlerter and fire alert`, async() => {
 	// Setup

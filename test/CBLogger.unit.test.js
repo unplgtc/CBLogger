@@ -1,62 +1,87 @@
-'use strict';
+import CBAlerter from '@unplgtc/cbalerter';
+import CBLogger from './../src/CBLogger.js';
+import { jest } from '@jest/globals';
+import util from 'util';
 
-const CBAlerter = require('@unplgtc/cbalerter');
-const CBLogger = require('./../src/CBLogger');
-const StandardError = require('@unplgtc/standard-error');
-const util = require('util');
+import Errors from '@unplgtc/standard-error';
+const {
+	HttpError,
+	MethodNotAllowedError,
+	AlreadyExtendedError,
+	InvalidExtensionError,
+	AlertingUnavailableError
+} = Errors;
 
 // Global Setup
-var alerter = {
+const alerter = {
 	alert(level, key, data, options, err) {
 		console.log(`ALERTING ${key} with scope ${level}`);
 		return Promise.resolve('Success');
 	}
 }
+const http500Error = new HttpError(500);
 
 // Tests
 test(`Extend CBLogger with alerter object`, async() => {
 	// Setup
-	var badAlerter = {
+	const badAlerter = {
 		functionNotNamedAlert() {
 			console.error('Nope!');
 		}
 	}
 
 	// Execute
-	var badRes = CBLogger.extend(CBLogger.EXTENSION.Alerter, badAlerter);
-	var goodRes = CBLogger.extend(CBLogger.EXTENSION.Alerter, alerter);
+	let badResErr, goodResErr;
+	try {
+		CBLogger.extend(CBLogger.EXTENSION.Alerter, badAlerter);
+
+	} catch (err) {
+		badResErr = err;
+	}
+	try {
+		CBLogger.extend(CBLogger.EXTENSION.Alerter, alerter);
+
+	} catch (err) {
+		goodResErr = err;
+	}
 
 	// Test
-	expect(badRes).toEqual(StandardError.CBLogger_501());
-	expect(goodRes).toBe(true);
+	expect(badResErr instanceof InvalidExtensionError).toBe(true);
+	expect(goodResErr).toBe(undefined);
 });
 
 test(`Unextend CBLogger`, async() => {
 	// Execute
-	var res = CBLogger.unextendAlerter();
-	var errRes = CBLogger.unextendAlerter();
+	let res, errRes;
+	try {
+		res = CBLogger.unextendAlerter();
+		CBLogger.unextendAlerter();
+
+	} catch(err) {
+		errRes = err;
+	}
 
 	// Test
 	expect(res).toBe(true);
-	expect(errRes).toEqual(StandardError.CBLogger_405());
+	expect(errRes instanceof MethodNotAllowedError).toBe(true);
 });
 
 describe.each`
-	key                    | data                  | options          | err                         | logFunc    | func
-	${'debug_1_simple'}    | ${{text: 'Test 1'}}   | ${undefined}     | ${undefined}                | ${'log'}   | ${'debug'}
-	${'debug_2_err'}       | ${{text: 'Test 2'}}   | ${undefined}     | ${StandardError.http_500()} | ${'log'}   | ${'debug'}
-	${'debug_3_stack'}     | ${{text: 'Test 3'}}   | ${{stack: true}} | ${StandardError.http_500()} | ${'log'}   | ${'debug'}
-	${'debug_4_no_ts'}     | ${{text: 'Test 4'}}   | ${{ts: false}}   | ${StandardError.http_500()} | ${'log'}   | ${'debug'}
-	${'info_1_simple'}     | ${{text: 'Test 5'}}   | ${undefined}     | ${undefined}                | ${'log'}   | ${'info'}
-	${'info_2_no_data'}    | ${undefined}          | ${undefined}     | ${undefined}                | ${'log'}   | ${'info'}
-	${'info_3_nulls'}      | ${null}               | ${null}          | ${null}                     | ${'log'}   | ${'info'}
-	${'warn_1_simple'}     | ${{text: 'Test 8'}}   | ${undefined}     | ${undefined}                | ${'error'} | ${'warn'}
-	${'warn_2_err'}        | ${{text: 'Test 9'}}   | ${undefined}     | ${StandardError.http_500()} | ${'error'} | ${'warn'}
-	${'warn_3_big_data'}   | ${{t:'e',s:'t',n:10}} | ${undefined}     | ${StandardError.http_500()} | ${'error'} | ${'warn'}
-	${'error_1_simple'}    | ${{text: 'Test 11'}}  | ${undefined}     | ${undefined}                | ${'error'} | ${'error'}
-	${'error_2_err_txt'}   | ${{text: 'Test 12'}}  | ${undefined}     | ${'Error!'}                 | ${'error'} | ${'error'}
-	${'error_3_err_obj'}   | ${{text: 'Test 13'}}  | ${undefined}     | ${StandardError.http_500()} | ${'error'} | ${'error'}
-	${'error_4_err_stack'} | ${{text: 'Test 14'}}  | ${{stack: true}} | ${StandardError.http_500()} | ${'error'} | ${'error'}
+	key                    | data                  | options          | err             | logFunc    | func
+	${'debug_1_simple'}    | ${{text: 'Test 1'}}   | ${undefined}     | ${undefined}    | ${'log'}   | ${'debug'}
+	${'debug_2_err'}       | ${{text: 'Test 2'}}   | ${undefined}     | ${http500Error} | ${'log'}   | ${'debug'}
+	${'debug_3_stack'}     | ${{text: 'Test 3'}}   | ${{stack: true}} | ${http500Error} | ${'log'}   | ${'debug'}
+	${'debug_4_no_ts'}     | ${{text: 'Test 4'}}   | ${{ts: false}}   | ${http500Error} | ${'log'}   | ${'debug'}
+	${'info_1_simple'}     | ${{text: 'Test 5'}}   | ${undefined}     | ${undefined}    | ${'log'}   | ${'info'}
+	${'info_2_no_data'}    | ${undefined}          | ${undefined}     | ${undefined}    | ${'log'}   | ${'info'}
+	${'info_3_nulls'}      | ${null}               | ${null}          | ${null}         | ${'log'}   | ${'info'}
+	${'warn_1_simple'}     | ${{text: 'Test 8'}}   | ${undefined}     | ${undefined}    | ${'error'} | ${'warn'}
+	${'warn_2_err'}        | ${{text: 'Test 9'}}   | ${undefined}     | ${http500Error} | ${'error'} | ${'warn'}
+	${'warn_3_big_data'}   | ${{t:'e',s:'t',n:10}} | ${undefined}     | ${http500Error} | ${'error'} | ${'warn'}
+	${'error_1_simple'}    | ${{text: 'Test 11'}}  | ${undefined}     | ${undefined}    | ${'error'} | ${'error'}
+	${'error_2_err_txt'}   | ${{text: 'Test 12'}}  | ${undefined}     | ${'Error!'}     | ${'error'} | ${'error'}
+	${'error_3_err_obj'}   | ${{text: 'Test 13'}}  | ${undefined}     | ${http500Error} | ${'error'} | ${'error'}
+	${'error_4_err_stack'} | ${{text: 'Test 14'}}  | ${{stack: true}} | ${http500Error} | ${'error'} | ${'error'}
 `(`CBLogger logs expected output for each logging function based on arguments`, ({key, data, options, err, logFunc, func}) => {
 	// Setup
 	var mockedSource = 'fileName L1';
@@ -66,10 +91,10 @@ describe.each`
 	console.log = jest.fn();
 	console.error = jest.fn();
 	CBLogger.sourceStack = jest.fn(() => mockedSourceStack);
-	
+
 	var mockedDate = new Date();
 	global.Date = jest.fn(() => mockedDate);
-	
+
 	var mockedOpts = options;
 	if (!mockedOpts || typeof mockedOpts != 'object') {
 		mockedOpts = {};
@@ -100,17 +125,13 @@ describe.each`
 		}
 		options.alert = true;
 		args = [key, data, options, err];
-		var errorKeyLine = `ERROR: ** logger_cannot_alert`;
-		var errTsLine = `${`at ${mockedDate.toISOString().replace('T', ' ')} (${mockedDate.getTime()})`}`;
-		var errorStackLine = `\n   ${mockedStack}`;
-		var errorErrLine = `\n** ${util.inspect(StandardError.CBLogger_503())}`;
 
 		// Execute
 		CBLogger[func](...args);
 
 		// Test
 		expect(console[logFunc]).toHaveBeenCalledWith(...outputArgs);
-		expect(console.error).toHaveBeenCalledWith(errorKeyLine, errorErrLine, sourceLine, errTsLine, errorStackLine);
+		expect(console.error).toHaveBeenCalled();
 	});
 
 	test(`add alerter`, async() => {
@@ -139,7 +160,7 @@ describe.each`
 
 		// Test
 		expect(res).toBe(true);
-	});	
+	});
 });
 
 test(`CBLogger extended with invalid alerter (wrong number of accepted arguments) outputs error when called`, async() => {

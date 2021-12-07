@@ -1,11 +1,33 @@
-'use strict';
+import { createErrors } from '@unplgtc/standard-error';
+import path from 'path';
+import util from 'util';
 
-const StandardError = require('@unplgtc/standard-error');
-const path = require('path');
-const util = require('util');
+const [
+	MethodNotAllowedError,
+	AlreadyExtendedError,
+	InvalidExtensionError,
+	AlertingUnavailableError
+] = createErrors([
+	{
+		name: 'MethodNotAllowedError',
+		message: 'Cannot unextend because CBLogger is not currently extended with that object type'
+	},
+	{
+		name: 'AlreadyExtendedError',
+		message: 'CBLogger has already been extended with this extension type. Only one extension of each type is allowed'
+	},
+	{
+		name: 'InvalidExtensionError',
+		message: 'Object passed to `CBLogger.extend()` does not implement required function'
+	},
+	{
+		name: 'AlertingUnavailableError',
+		message: 'CBLogger has not been extended with an alerter, so the alert functionality is not available'
+	}
+]);
 
 let rTracer;
-try { rTracer = require('cls-rtracer'); } catch (err) {}
+try { rTracer = await import('cls-rtracer'); } catch (err) {}
 
 const CBLogger = {
 	EXTENSION: {
@@ -31,14 +53,14 @@ const CBLogger = {
 
 	extend(type, object) {
 		if (this[type]) {
-			return StandardError.CBLogger_409();
+			throw new AlreadyExtendedError();
 		}
 		return this.extendLogger(type, object);
 	},
 
 	unextendAlerter() {
 		if (!this[this.EXTENSION.Alerter]) {
-			return StandardError.CBLogger_405();
+			throw new MethodNotAllowedError();
 		}
 		return this.unextendPrototype();
 	}
@@ -78,7 +100,7 @@ const Internal = {
 
 		const output = [
 			`${level}: ** ${key}`,
-			`${data ? `\n${util.inspect(data)}` : ''}`,
+			`${data ? `\n${util.inspect(data, { depth: (options.depth !== undefined ? options.depth : 4) })}` : ''}`,
 			`${err ? `\n** ${(typeof err == 'string' ? err : util.inspect(err))}` : ''}`,
 			`\n-> ${sourceStack.source}`,
 			`${options.ts !== false ? `at ${ts.toISOString().replace('T', ' ')} (${ts.getTime()})` : ''}`,
@@ -110,7 +132,7 @@ const Internal = {
 					this.error('alert_error_thrown', {message: 'Error thrown attempting to await alert function - make sure alerter takes correct arguments and returns a Promise'}, undefined, err);
 				}
 			} else {
-				this.error('logger_cannot_alert', null, {stack: true}, StandardError.CBLogger_503());
+				this.error('logger_cannot_alert', null, {stack: true}, new AlertingUnavailableError());
 			}
 		}
 	},
@@ -127,7 +149,7 @@ const Internal = {
 	extendLogger(type, object) {
 		if (type === this.EXTENSION.Alerter) {
 			if (!object.hasOwnProperty('alert') || typeof object.alert !== 'function') {
-				return StandardError.CBLogger_501();
+				throw new InvalidExtensionError();
 			}
 
 			this[this.EXTENSION.Alerter] = true;
@@ -138,7 +160,7 @@ const Internal = {
 
 		} else if (type === this.EXTENSION.Honeybadger) {
 			if (typeof object.notify !== 'function') {
-				return StandardError.CBLogger_501();
+				throw new InvalidExtensionError();
 			}
 
 			Object.defineProperty(this, type, {
@@ -163,19 +185,12 @@ const Internal = {
 
 	unextendPrototype() {
 		this[this.EXTENSION.Alerter] = false;
-		// Delegate from Internal to extended object
+		// Rewrite the delegation tree to point directly to the standard Object prototype again
 		Object.setPrototypeOf(Object.getPrototypeOf(this), Object.prototype);
 		return true;
 	}
 }
 
-StandardError.add([
-	{code: 'CBLogger_405', domain: 'CBLogger', title: 'Method Not Allowed', message: 'Cannot unextend because CBLogger is not currently extended with that object type'},
-	{code: 'CBLogger_409', domain: 'CBLogger', title: 'Conflict', message: 'Logger has already been extended with this extension type'},
-	{code: 'CBLogger_501', domain: 'CBLogger', title: 'Not Implemented', message: 'Object passed to `CBLogger.extend` does not implement required function'},
-	{code: 'CBLogger_503', domain: 'CBLogger', title: 'Service Unavailable', message: 'CBLogger has not been extended, alert service unavailable'}
-]);
-
 Object.setPrototypeOf(CBLogger, Internal);
 
-module.exports = CBLogger;
+export default CBLogger;

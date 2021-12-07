@@ -5,24 +5,24 @@
 
 ### Quality logger for Node applications
 
-CBLogger can help you put an end to loosely formatted log messages. As your Node projects grow larger, haphazard and unstandardized log output become significantly less effective. If you don't have a strategy for identifying the source of your log messages and tagging them with timestamps, tracking down bugs with those logs becomes unnecessarily difficult and time consuming.
+CBLogger puts an end to loosely-formatted log messages. As your Node projects grow larger, haphazard and unstandardized log output becomes an enormous hinderance. If you don't have a strategy for identifying the source of your log messages, matching identical messages with easy-to-find keys, and tagging them with timestamps, then tracking down bugs with those logs becomes unnecessarily difficult and time consuming.
 
 CBLogger provides a light interface which you can use in place of calls to `console.log`, `console.error`, or `console.trace`. Pass in some simple parameters and CBLogger will assemble and print your log messages in a standardized and information-rich way. Full stack traces can be added to any log message by flagging an option, but every log will always include the filename and line number of the CBLogger call, as well as both human-readable and [Unix epoch](https://en.wikipedia.org/wiki/Unix_time) timestamps.
 
-Once you transition to CBLogger, your application's log output will be richer and more useful. Monitoring and debugging problems will be easier than ever before.
+Once you transition to CBLogger, your application's log output will be richer and more useful. Monitoring and debugging problems, and sending runtime alerts to your platform of choice will be easier than ever before.
 
 ## Usage
 
 Install CBLogger from npm:
 
 ```
-$ npm install @unplgtc/cblogger --save
+$ npm i @unplgtc/cblogger
 ```
 
 Import CBLogger into a service:
 
 ```js
-const CBLogger = require('@unplgtc/cblogger');
+import CBLogger from '@unplgtc/cblogger';
 ```
 
 CBLogger support four different log output calls: `CBLogger.debug`, `CBLogger.info`, `CBLogger.warn`, and `CBLogger.error`. All four use identical interfaces, so they can be used interchangeably based solely on what level of log you need to output. All arguments to CBLogger calls are optional, but you should at least include a `key` if you want your logs to mean anything.
@@ -38,7 +38,7 @@ CBLogger.info('Some arbitrary text');
 Annotated output:
 
 ```
-INFO: ** Some arbitrary text 
+INFO: ** Some arbitrary text
 -> MyService.js L3 at 2018-10-08 03:50:35.417Z (1538970635417)
    ^            ^     ^                         ^
    Filename   Line #  Human-readable timestamp  Epoch timestamp
@@ -56,9 +56,9 @@ CBlogger.debug('Description of this object', someObject);
 Output:
 
 ```
-DEBUG: ** Description of this object 
-{ foo: 'bar' } 
--> MyService.js L4 at 2018-10-08 03:50:35.417Z (1538970635417) 
+DEBUG: ** Description of this object
+{ foo: 'bar' }
+-> MyService.js L4 at 2018-10-08 03:50:35.417Z (1538970635417)
 ```
 
 Using CBLogger with unique keys works the exact same way, and has the added bonus of improving log aggregation techniques if you ever need to implement them. Keys are more easily identifiable in manual log searches as well. Here's an example with a `warn` message:
@@ -70,9 +70,9 @@ CBLogger.warn('unique_key_for_this_warning', someObject);
 Output:
 
 ```
-WARN: ** unique_key_for_this_warning 
-{ foo: 'bar' } 
--> MyService.js L5 at 2018-10-08 03:50:35.417Z (1538970635417) 
+WARN: ** unique_key_for_this_warning
+{ foo: 'bar' }
+-> MyService.js L5 at 2018-10-08 03:50:35.417Z (1538970635417)
 ```
 
 The second argument to any CBLogger log call, `data`, accepts any JavaScript Object. You can pass in your own Objects you want to output if you need no context around them other than your key, but it's also a good place to type out more descriptive messages in non-key form for your logs:
@@ -84,9 +84,9 @@ CBLogger.info('some_info_key', {message: 'This is what happened', theObject: som
 Output:
 
 ```
-INFO: ** some_info_key 
-{ message: 'This is what happened', theObject: { foo: 'bar' } } 
--> MyService.js L4 at 2018-10-08 03:50:35.417Z (1538970635417) 
+INFO: ** some_info_key
+{ message: 'This is what happened', theObject: { foo: 'bar' } }
+-> MyService.js L4 at 2018-10-08 03:50:35.417Z (1538970635417)
 ```
 
 If the Object in your `data` field grows long enough, it will be split out onto separate lines:
@@ -98,16 +98,16 @@ CBLogger.info('some_info_key', {message: 'This is what happened', theObject: som
 Output:
 
 ```
-INFO: ** some_info_key 
+INFO: ** some_info_key
 { message: 'This is what happened',
   theObject: { foo: 'bar' },
-  bar: 'baz' } 
--> MyService.js L4 at 2018-10-08 03:50:35.417Z (1538970635417) 
+  bar: 'baz' }
+-> MyService.js L4 at 2018-10-08 03:50:35.417Z (1538970635417)
 ```
 
 ## Options
 
-The third CBLogger argument is `options`, and unsurprisingly it takes an Object with which you can flag various options. Currently CBLogger supports four options: `stack`, `ts`, `alert`, and `webhook`.
+The third CBLogger argument is `options`, and unsurprisingly it takes an Object with which you can flag various options. Currently CBLogger supports five options: `stack`, `ts`, `depth`, `alert`, and `webhook`.
 
 Setting `stack` to `true` in the `options` parameter of any call to CBLogger will result in a full stacktrace being appended to your log's output:
 
@@ -118,9 +118,9 @@ CBLogger.info('some_info_key', {message: 'This is what happened'}, {stack: true}
 Output:
 
 ```
-INFO: ** some_info_key 
-{ message: 'This is what happened' } 
--> MyService.js L4 at 2018-10-08 03:50:35.417Z (1538970635417) 
+INFO: ** some_info_key
+{ message: 'This is what happened' }
+-> MyService.js L4 at 2018-10-08 03:50:35.417Z (1538970635417)
    at Object.<anonymous> (/Users/path/to/file/src/MyService.js:4:10)
     at Module._compile (module.js:643:30)
     at Object.Module._extensions..js (module.js:654:10)
@@ -130,7 +130,7 @@ INFO: ** some_info_key
     at Function.Module.runMain (module.js:684:10)
 ```
 
-The `ts` options is always true by default, but you can explicitly set it to `false` if you want to remove the timestamps from your log output. This may be useful if your log data already includes a timestamp, of if you're using a process manager like PM2 and want to use its log timestamps instead of CBLogger's (a global flag for this option is coming in a future update).
+The `ts` options is always true by default, but you can explicitly set it to `false` if you want to remove the timestamps from your log output. This may be useful if your log data already includes a timestamp, of if you're using a process manager like PM2 and want to use its log timestamps instead of CBLogger's.
 
 ```js
 CBLogger.info('some_info_key', {message: 'This is what happened'}, {ts: false});
@@ -139,16 +139,18 @@ CBLogger.info('some_info_key', {message: 'This is what happened'}, {ts: false});
 Output:
 
 ```
-INFO: ** some_info_key 
-{ message: 'This is what happened' } 
+INFO: ** some_info_key
+{ message: 'This is what happened' }
 -> MyService.js L4
 ```
+
+The `depth` option allows you to output nested objects in the data field. By default depth is set to `4`, but you can set it via this option to lesser or greater numbers, or set it to `null` to output all levels of the data object regardless of how deep it goes.
 
 The `alert` and `webhook` options trigger custom webhook alerting objects which CBLogger can be extended with. See the "Extending with Alerters" section below for more information on using these options.
 
 ## Err
 
-`err` is the fourth and final argument for CBLogger's log output functions. `err` can be any object, but by convention it should represent an actual error that the log message pertains to. This argument is often used for JavaScript `Error` objects which have been thrown and caught and need to be outputted into your logs. You can also use [StandardError](https://github.com/unplgtc/StandardError) errors for this argument, but those are most commonly placed in the `data` Object so that `err` is free for a thrown error. Whatever you choose to pass in for `err`, it will be printed underneath the `data` object, preceded by two asterisks.
+`err` is the fourth and final argument for CBLogger's log output functions. `err` can be any object, but by convention it should represent an actual error that the log message pertains to. This argument is often used for JavaScript `Error` objects which have been thrown and caught and need to be outputted into your logs. You can also use [StandardError](https://github.com/unplgtc/StandardError) errors for this argument. Whatever you choose to pass in for `err`, it will be printed underneath the `data` object, preceded by two asterisks.
 
 ```js
 CBLogger.error('some_error_key', {message: 'Uh oh there was an error'}, undefined, new Error('oh no'));
@@ -157,8 +159,8 @@ CBLogger.error('some_error_key', {message: 'Uh oh there was an error'}, undefine
 Output:
 
 ```
-INFO: ** some_error_key 
-{ message: 'Uh oh there was an error' } 
+INFO: ** some_error_key
+{ message: 'Uh oh there was an error' }
 ** Error: oh no
     at Object.<anonymous> (/Users/path/to/file/src/MyService.js:7:79)
     at Module._compile (module.js:643:30)
@@ -168,7 +170,7 @@ INFO: ** some_error_key
     at Function.Module._load (module.js:491:3)
     at Function.Module.runMain (module.js:684:10)
     at startup (bootstrap_node.js:187:16)
-    at bootstrap_node.js:608:3 
+    at bootstrap_node.js:608:3
 -> test.js L7 at 2018-10-11 04:00:27.363Z (1539230427363)
 ```
 
@@ -199,8 +201,12 @@ CBLogger supports being extended with a single "alerter" Object. This can be any
 To extend CBLogger with an alerter Object (exemplified here with CBAlerter, but that is not required) just pass the Object to CBLogger's `extend()` function, along with the `Alerter` enum:
 
 ```js
-const CBLogger = require('@unplgtc/cblogger');
-const CBAlerter = require('@unplgtc/cbalerter');
+import CBLogger from '@unplgtc/cblogger';
+import CBAlerter from '@unplgtc/cbalerter';
+
+//
+// Make sure to set up your CBAlerter instance here
+//
 
 CBLogger.extend(CBLogger.EXTENSION.Alerter, CBAlerter);
 
@@ -237,7 +243,7 @@ result = CBLogger.extend(CBLogger.EXTENSION.Alerter, someAlerter);
 CBLogger integrates with [Honeybadger](https://honeybadger.io) to track error metrics. Enable the extension by passing a configured `Honeybadger` object to `CBLogger.extend()`, like so:
 
 ```js
-const Honeybadger = require('@honeybadger-io/js');
+import Honeybadger from '@honeybadger-io/js';
 
 Honeybadger.configure(honeybadgerConfig);
 

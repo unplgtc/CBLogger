@@ -26,9 +26,6 @@ const [
 	}
 ]);
 
-let rTracer;
-try { rTracer = await import('cls-rtracer'); } catch (err) {}
-
 const CBLogger = {
 	EXTENSION: {
 		Alerter: '_alerter',
@@ -81,18 +78,6 @@ const Internal = {
 
 		if (!options || typeof options != 'object') {
 			options = {};
-		}
-
-		let reqId;
-		if (rTracer) {
-			reqId = rTracer.id();
-		}
-
-		if (reqId && !data) {
-			data = { _requestId: reqId };
-
-		} else if (reqId && typeof data == 'object') {
-			data._requestId = reqId;
 		}
 
 		const sourceStack = this.sourceStack(),

@@ -1,7 +1,7 @@
 {
   "name": "@unplgtc/cblogger",
-  "version": "2.0.0-nextjs",
-  "description": "Quality logger for Node applications",
+  "version": "nextjs-2.0.1",
+  "description": "Quality logger for Next.js applications",
   "type": "module",
   "exports": "./src/CBLogger.js",
   "engines": {
@@ -25,7 +25,8 @@
     "jest": "^27.3.1"
   },
   "dependencies": {
-    "@unplgtc/standard-error": "^3.0.1"
+    "@unplgtc/standard-error": "^3.0.1",
+    "util": "^0.12.4"
   },
   "directories": {
     "test": "test"

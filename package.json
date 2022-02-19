@@ -1,6 +1,6 @@
 {
   "name": "@unplgtc/cblogger",
-  "version": "nextjs-2.0.1",
+  "version": "2.0.1-nextjs",
   "description": "Quality logger for Next.js applications",
   "type": "module",
   "exports": "./src/CBLogger.js",

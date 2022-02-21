@@ -1,5 +1,4 @@
 import { createErrors } from '@unplgtc/standard-error';
-import path from 'path';
 import util from 'util';
 
 const [

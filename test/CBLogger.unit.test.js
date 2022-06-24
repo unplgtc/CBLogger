@@ -4,13 +4,13 @@ import { jest } from '@jest/globals';
 import util from 'util';
 
 import Errors from '@unplgtc/standard-error';
+const { HttpError } = Errors;
 const {
-	HttpError,
 	MethodNotAllowedError,
 	AlreadyExtendedError,
 	InvalidExtensionError,
 	AlertingUnavailableError
-} = Errors;
+} = Errors.CBLogger;
 
 // Global Setup
 const alerter = {

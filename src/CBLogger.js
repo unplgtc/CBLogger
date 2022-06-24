@@ -9,18 +9,26 @@ const [
 ] = createErrors([
 	{
 		name: 'MethodNotAllowedError',
+		namespace: 'CBLogger',
+		namespaceOnly: true,
 		message: 'Cannot unextend because CBLogger is not currently extended with that object type'
 	},
 	{
 		name: 'AlreadyExtendedError',
+		namespace: 'CBLogger',
+		namespaceOnly: true,
 		message: 'CBLogger has already been extended with this extension type. Only one extension of each type is allowed'
 	},
 	{
 		name: 'InvalidExtensionError',
+		namespace: 'CBLogger',
+		namespaceOnly: true,
 		message: 'Object passed to `CBLogger.extend()` does not implement required function'
 	},
 	{
 		name: 'AlertingUnavailableError',
+		namespace: 'CBLogger',
+		namespaceOnly: true,
 		message: 'CBLogger has not been extended with an alerter, so the alert functionality is not available'
 	}
 ]);

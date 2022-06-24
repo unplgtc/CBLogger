@@ -1,6 +1,6 @@
 {
   "name": "@unplgtc/cblogger",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Quality logger for Node applications",
   "type": "module",
   "exports": "./src/CBLogger.js",
@@ -21,11 +21,11 @@
   },
   "homepage": "https://github.com/unplgtc/CBLogger#readme",
   "devDependencies": {
-    "@unplgtc/cbalerter": "3.0.0",
+    "@unplgtc/cbalerter": "3.0.1",
     "jest": "^27.3.1"
   },
   "dependencies": {
-    "@unplgtc/standard-error": "^3.0.1"
+    "@unplgtc/standard-error": "4.0.1"
   },
   "directories": {
     "test": "test"
